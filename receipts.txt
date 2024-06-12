@@ -1,0 +1,5 @@
+Account Number: 170111
+Operation: Deposit
+Amount: $50000.00
+New Balance: $50000.00
+----------------------------------------
