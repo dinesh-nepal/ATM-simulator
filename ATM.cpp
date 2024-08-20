@@ -3,6 +3,7 @@
 #include <string>
 #include <iomanip>
 #include <vector>
+#include <ctime>
 
 using namespace std;
 
@@ -33,6 +34,33 @@ private:
                     string accNumber = line.substr(0, pos);
                     string userPin = line.substr(pos + 1);
                     if (accNumber == accountNumber && userPin == pin)
+                    {
+                        userFile.close();
+                        return true;
+                    }
+                }
+            }
+            userFile.close();
+        }
+        else
+        {
+            cout << "Unable to open user file." << endl;
+        }
+        return false;
+    }
+    bool isAccountNumberValid()
+    {
+        ifstream userFile(USER_FILE);
+        if (userFile.is_open())
+        {
+            string line;
+            while (getline(userFile, line))
+            {
+                size_t pos = line.find(',');
+                if (pos != string::npos)
+                {
+                    string accNumber = line.substr(0, pos);
+                    if (accNumber == accountNumber)
                     {
                         userFile.close();
                         return true;
@@ -126,6 +154,37 @@ private:
             cout << "Unable to open balance file for writing." << endl;
         }
     }
+    void generateReceipt(const string &transactionType, double amount = 0)
+    {
+        ofstream receiptFile(RECEIPT_FILE, ios::app);
+        if (receiptFile.is_open())
+        {
+            time_t now = time(0);
+            char *dt = ctime(&now);
+
+            stringstream receiptContent;
+            receiptContent << "Date/Time: " << dt;
+            receiptContent << "Account Number: " << accountNumber << endl;
+            receiptContent << "Transaction: " << transactionType << endl;
+            if (transactionType != "Check Balance")
+            {
+                receiptContent << "Amount: $" << fixed << setprecision(2) << amount << endl;
+            }
+            receiptContent << "Balance: $" << fixed << setprecision(2) << balance << endl;
+            receiptContent << "---------------------------------------" << endl;
+
+            receiptFile << receiptContent.str();
+            receiptFile.close();
+
+            // Print the receipt to the terminal
+            cout << "\nReceipt:\n"
+                 << receiptContent.str();
+        }
+        else
+        {
+            cout << "Unable to open receipt file." << endl;
+        }
+    }
 
 public:
     ATM()
@@ -133,7 +192,15 @@ public:
         balance = 0;
         cout << "Enter your account number: ";
         cin >> accountNumber;
-        readAccountData();
+        if (isAccountNumberValid())
+        {
+            readAccountData();
+        }
+        else
+        {
+            cout << "Invalid account number. Please try again!!!" << endl;
+            ATM();
+        }
     }
 
     void run()
@@ -173,14 +240,29 @@ public:
         else
         {
             cout << "Authentication failed. Exiting..." << endl;
-       run();
         }
-        
     }
 
     void checkBalance()
     {
-        cout << "Your current balance is: $" << fixed << setprecision(2) << balance << endl;
+        cout << "Your current balance is: Rs " << fixed << setprecision(2) << balance << endl;
+        char ch;
+        cout << "Do you want the receipt!![y/n]" << endl;
+        cin >> ch;
+        switch (ch)
+        {
+        case 'y':
+        case 'Y':
+            generateReceipt("Check Balance");
+            cout << "Thank you for using the ATM!" << endl;
+            break;
+        case 'n':
+        case 'N':
+            cout << "Thank you for using the ATM!" << endl;
+            break;
+        default:
+            exit(1);
+        }
     }
 
     void withdraw()
@@ -195,8 +277,25 @@ public:
         else
         {
             balance -= amount;
-            cout << "Withdrawal successful. New balance: $" << fixed << setprecision(2) << balance << endl;
+            cout << "Withdrawal successful. Take Your Cash!!" << fixed << setprecision(2) << balance << endl;
             updateAccountData();
+            cout << "Do you want the receipt!![y/n]" << endl;
+            char ch;
+            cin >> ch;
+            switch (ch)
+            {
+            case 'y':
+            case 'Y':
+                generateReceipt("Withdraw", amount);
+                cout << "Thank you for using the ATM!" << endl;
+                break;
+            case 'n':
+            case 'N':
+                cout << "Thank you for using the ATM!" << endl;
+                break;
+            default:
+                exit(1);
+            }
         }
     }
 
@@ -206,8 +305,26 @@ public:
         cout << "Enter the amount to deposit: ";
         cin >> amount;
         balance += amount;
-        cout << "Deposit successful. New balance: $" << fixed << setprecision(2) << balance << endl;
+        cout << "Deposited successfully." << fixed << setprecision(2) << balance << endl;
+        cout << "Thank you For using  ATM!!" << endl;
         updateAccountData();
+        char ch;
+        cout << "Do you want the receipt!![y/n]" << endl;
+        cin >> ch;
+        switch (ch)
+        {
+        case 'y':
+        case 'Y':
+            generateReceipt("Deposit", amount);
+            cout << "Thank you for using the ATM!" << endl;
+            break;
+        case 'n':
+        case 'N':
+            cout << "Thank you for using the ATM!" << endl;
+            break;
+        default:
+            exit(1);
+        }
     }
 };
 
