@@ -3,3 +3,14 @@ Operation: Deposit
 Amount: $50000.00
 New Balance: $50000.00
 ----------------------------------------
+Date/Time: Sun Aug 25 13:04:23 2024
+Account Number: 170111
+Transaction: Check Balance
+Balance: $50000.00
+---------------------------------------
+Date/Time: Sun Aug 25 13:04:51 2024
+Account Number: 170111
+Transaction: Deposit
+Amount: $20000.00
+Balance: $70000.00
+---------------------------------------
