@@ -163,20 +163,20 @@ private:
             char *dt = ctime(&now);
 
             stringstream receiptContent;
+            receiptContent << "---------------------------------------" << endl;
             receiptContent << "Date/Time: " << dt;
             receiptContent << "Account Number: " << accountNumber << endl;
             receiptContent << "Transaction: " << transactionType << endl;
             if (transactionType != "Check Balance")
             {
-                receiptContent << "Amount: $" << fixed << setprecision(2) << amount << endl;
+                receiptContent << "Amount: Rs" << fixed << setprecision(2) << amount << endl;
             }
-            receiptContent << "Balance: $" << fixed << setprecision(2) << balance << endl;
+            receiptContent << "Balance: Rs" << fixed << setprecision(2) << balance << endl;
             receiptContent << "---------------------------------------" << endl;
 
             receiptFile << receiptContent.str();
             receiptFile.close();
 
-            // Print the receipt to the terminal
             cout << "\nReceipt:\n"
                  << receiptContent.str();
         }
@@ -190,75 +190,94 @@ public:
     ATM()
     {
         balance = 0;
+    }
+
+    void initialize()
+    {
         cout << "Enter your account number: ";
         cin >> accountNumber;
         if (isAccountNumberValid())
         {
             readAccountData();
+            if (authenticateUser())
+            {
+                run();
+            }
+            else
+            {
+                cout << "<<<...Enter valid information....>>>" << endl;
+                initialize(); // calling again if pin is not valid
+                return;
+            }
         }
         else
         {
-            cout << "Invalid account number. Please try again!!!" << endl;
-            ATM();
+            cout << "<<<<______Invaild Account Number______>>>>" << endl;
+            initialize(); // calling again if accno not valid
         }
     }
 
     void run()
     {
-        if (authenticateUser())
-        {
-            char choice;
-            do
-            {
-                cout << "\nATM Menu:" << endl;
-                cout << "1. Check Balance" << endl;
-                cout << "2. Withdraw" << endl;
-                cout << "3. Deposit" << endl;
-                cout << "4. Exit" << endl;
-                cout << "Enter your choice: ";
-                cin >> choice;
 
-                switch (choice)
-                {
-                case '1':
-                    checkBalance();
-                    break;
-                case '2':
-                    withdraw();
-                    break;
-                case '3':
-                    deposit();
-                    break;
-                case '4':
-                    cout << "Thank you for using the ATM!" << endl;
-                    break;
-                default:
-                    cout << "Invalid choice. Please try again." << endl;
-                }
-            } while (choice != '4');
-        }
-        else
+        char choice;
+        do
         {
-            cout << "Authentication failed. Exiting..." << endl;
-        }
+            cout << "\n<<-----ATM Menu------->>" << endl;
+            cout << "1. Check Balance" << endl;
+            cout << "2. Withdraw" << endl;
+            cout << "3. Deposit" << endl;
+            cout << "4. Exit" << endl;
+            cout << "Enter your choice: ";
+            cin >> choice;
+
+            switch (choice)
+            {
+            case '1':
+                checkBalance();
+                break;
+            case '2':
+                withdraw();
+                break;
+            case '3':
+                deposit();
+                break;
+            case '4':
+                cout << "--------------------------------------------" << endl;
+                cout << "Thank you for using the ATM!" << endl;
+                cout << "--------------------------------------------" << endl;
+                initialize();
+                break;
+            default:
+                cout << "Invalid choice. Please try again." << endl;
+            }
+        } while (choice != '4');
     }
 
     void checkBalance()
     {
+        cout << "<-------------------------------------------------------->" << endl;
         cout << "Your current balance is: Rs " << fixed << setprecision(2) << balance << endl;
         char ch;
+        cout << "<-------------------------------------------------------->" << endl;
         cout << "Do you want the receipt!![y/n]" << endl;
         cin >> ch;
         switch (ch)
         {
         case 'y':
         case 'Y':
+            cout << "<-------------------------------------------------------->" << endl;
             generateReceipt("Check Balance");
             cout << "Thank you for using the ATM!" << endl;
+            cout << "<-------------------------------------------------------->" << endl;
+            initialize();
             break;
         case 'n':
         case 'N':
+            cout << "<-------------------------------------------------------->" << endl;
             cout << "Thank you for using the ATM!" << endl;
+            cout << "<-------------------------------------------------------->" << endl;
+            initialize();
             break;
         default:
             exit(1);
@@ -267,17 +286,28 @@ public:
 
     void withdraw()
     {
-        double amount;
-        cout << "Enter the amount to withdraw: ";
+        long amount;
+        cout << "<-------------------------------------------------------->" << endl;
+        cout << "Enter the amount to withdraw(Only multiple of 500): " << endl;
         cin >> amount;
         if (amount > balance)
         {
             cout << "Insufficient funds." << endl;
         }
+        else if (amount > 25000)
+        {
+            cout << endl;
+            cout << "\t<---You Can Only Cash Out Rs25000 or less--->" << endl;
+        }
+        else if (amount % 500 != 0)
+        {
+            cout << "\t<---Please Only Enter Multiple of 500--->" << endl;
+        }
         else
         {
             balance -= amount;
-            cout << "Withdrawal successful. Take Your Cash!!" << fixed << setprecision(2) << balance << endl;
+            cout << "<-------------------------------------------------------->" << endl;
+            cout << "Withdrawal successful. Take Your Cash!!" << endl;
             updateAccountData();
             cout << "Do you want the receipt!![y/n]" << endl;
             char ch;
@@ -286,12 +316,19 @@ public:
             {
             case 'y':
             case 'Y':
+                cout << "<-------------------------------------------------------->" << endl;
+                cout << "-----------------------------" << endl;
                 generateReceipt("Withdraw", amount);
                 cout << "Thank you for using the ATM!" << endl;
+                cout << "<-------------------------------------------------------->" << endl;
+                initialize();
                 break;
             case 'n':
             case 'N':
+                cout << "<-------------------------------------------------------->" << endl;
                 cout << "Thank you for using the ATM!" << endl;
+                cout << "<-------------------------------------------------------->" << endl;
+                initialize();
                 break;
             default:
                 exit(1);
@@ -301,29 +338,48 @@ public:
 
     void deposit()
     {
-        double amount;
-        cout << "Enter the amount to deposit: ";
+        long amount;
+        cout << "<-------------------------------------------------------->" << endl;
+        cout << "Enter the amount to deposit(Only Multiple of 500): ";
         cin >> amount;
-        balance += amount;
-        cout << "Deposited successfully." << fixed << setprecision(2) << balance << endl;
-        cout << "Thank you For using  ATM!!" << endl;
-        updateAccountData();
-        char ch;
-        cout << "Do you want the receipt!![y/n]" << endl;
-        cin >> ch;
-        switch (ch)
+        if (amount > 25000)
         {
-        case 'y':
-        case 'Y':
-            generateReceipt("Deposit", amount);
-            cout << "Thank you for using the ATM!" << endl;
-            break;
-        case 'n':
-        case 'N':
-            cout << "Thank you for using the ATM!" << endl;
-            break;
-        default:
-            exit(1);
+            cout << endl;
+            cout << "\t<---You Can Only Deposit Rs25000 or less--->" << endl;
+        }
+        else if (amount % 500 != 0)
+        {
+            cout << "\t<---Please Only Enter Multiple of 500--->" << endl;
+        }
+        else
+        {
+            balance += amount;
+            cout << "Deposited " << amount << "successfully." << endl;
+            updateAccountData();
+            char ch;
+            cout << "Do you want the receipt!![y/n]" << endl;
+            cin >> ch;
+            switch (ch)
+            {
+            case 'y':
+            case 'Y':
+                generateReceipt("Deposit", amount);
+                cout << "<-------------------------------------------------------->" << endl;
+                cout << "Thank you for using the ATM!" << endl;
+                cout << "<-------------------------------------------------------->" << endl;
+                initialize();
+                break;
+            case 'n':
+            case 'N':
+                cout << "<-------------------------------------------------------->" << endl;
+                cout << "Thank you for using the ATM!" << endl;
+
+                cout << "<-------------------------------------------------------->" << endl;
+                initialize();
+                break;
+            default:
+                exit(1);
+            }
         }
     }
 };
@@ -332,6 +388,7 @@ int main()
 {
 
     ATM atm;
-    atm.run();
+
+    atm.initialize();
     return 0;
-} 
+}
